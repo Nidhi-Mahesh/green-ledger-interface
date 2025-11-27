@@ -12,9 +12,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Upload, CheckCircle, Clock, XCircle } from "lucide-react";
+import { Plus, Upload, CheckCircle, Clock, XCircle, Copy } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { shortenHash } from "@/utils/fakeBlockchain";
 
 const Projects = () => {
   const [showForm, setShowForm] = useState(false);
@@ -29,6 +30,8 @@ const Projects = () => {
       status: "verified",
       expectedReduction: "500 tons CO₂e",
       submittedDate: "2024-01-15",
+      attestationHash: "0x7a3f8e2c4b9d1a6f5e8c7b4a9d2e1f3c8b7a6d5e4c3b2a1f9e8d7c6b5a4392bc",
+      mintTxHash: "0x1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c",
     },
     {
       id: 2,
@@ -38,6 +41,8 @@ const Projects = () => {
       status: "pending",
       expectedReduction: "800 tons CO₂e",
       submittedDate: "2024-02-10",
+      attestationHash: null,
+      mintTxHash: null,
     },
     {
       id: 3,
@@ -47,8 +52,18 @@ const Projects = () => {
       status: "rejected",
       expectedReduction: "300 tons CO₂e",
       submittedDate: "2024-01-20",
+      attestationHash: null,
+      mintTxHash: null,
     },
   ];
+
+  const copyToClipboard = (hash: string) => {
+    navigator.clipboard.writeText(hash);
+    toast({
+      title: "Copied!",
+      description: "Hash copied to clipboard",
+    });
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -249,6 +264,33 @@ const Projects = () => {
                       </span>
                     </div>
                   </div>
+                  {/* Blockchain Hashes */}
+                  {project.attestationHash && (
+                    <div className="mt-3 pt-3 border-t border-border space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground">Attestation:</span>
+                        <button
+                          onClick={() => copyToClipboard(project.attestationHash!)}
+                          className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 font-mono"
+                        >
+                          <span>{shortenHash(project.attestationHash)}</span>
+                          <Copy className="w-3 h-3" />
+                        </button>
+                      </div>
+                      {project.mintTxHash && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-muted-foreground">Mint TX:</span>
+                          <button
+                            onClick={() => copyToClipboard(project.mintTxHash!)}
+                            className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 font-mono"
+                          >
+                            <span>{shortenHash(project.mintTxHash)}</span>
+                            <Copy className="w-3 h-3" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <Button variant="outline" size="sm">
                   View Details

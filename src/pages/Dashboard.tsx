@@ -11,10 +11,14 @@ import {
   Clock,
   AlertCircle,
   ArrowRight,
+  Copy,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { shortenHash } from "@/utils/fakeBlockchain";
+import { useToast } from "@/hooks/use-toast";
 
 const Dashboard = () => {
+  const { toast } = useToast();
   // Simulate user role - replace with actual auth context
   const [userRole] = useState<"project-owner" | "verifier" | "buyer-seller">(
     "project-owner"
@@ -34,6 +38,7 @@ const Dashboard = () => {
       description: "500 credits from Solar Farm Project Alpha",
       time: "2 hours ago",
       status: "success",
+      txHash: "0x7a3f8e2c4b9d1a6f5e8c7b4a9d2e1f3c8b7a6d5e4c3b2a1f9e8d7c6b5a4392bc",
     },
     {
       type: "verification",
@@ -41,6 +46,7 @@ const Dashboard = () => {
       description: "Wind Energy Project Delta awaiting approval",
       time: "5 hours ago",
       status: "pending",
+      txHash: null,
     },
     {
       type: "trade",
@@ -48,6 +54,7 @@ const Dashboard = () => {
       description: "Sold 200 credits at $20/credit",
       time: "1 day ago",
       status: "success",
+      txHash: "0x4e2d7f8a9b3c6d5e1f4a2b8c7d6e5f3a9b8c7d6e5f4a3b2c1d9e8f7a6b571af",
     },
     {
       type: "retirement",
@@ -55,8 +62,17 @@ const Dashboard = () => {
       description: "100 credits permanently retired",
       time: "2 days ago",
       status: "info",
+      txHash: "0x9c8b7a6d5e4f3c2b1a9e8d7c6b5a4f3e2d1c9b8a7f6e5d4c3b2a1f9e8d743de",
     },
   ];
+
+  const copyToClipboard = (hash: string) => {
+    navigator.clipboard.writeText(hash);
+    toast({
+      title: "Copied!",
+      description: "Transaction hash copied to clipboard",
+    });
+  };
 
   const notifications = [
     {
@@ -161,8 +177,19 @@ const Dashboard = () => {
                     <div className="text-sm text-muted-foreground truncate">
                       {activity.description}
                     </div>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      {activity.time}
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-xs text-muted-foreground">
+                        {activity.time}
+                      </span>
+                      {activity.txHash && (
+                        <button
+                          onClick={() => copyToClipboard(activity.txHash!)}
+                          className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 font-mono"
+                        >
+                          <span>{shortenHash(activity.txHash)}</span>
+                          <Copy className="w-3 h-3" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
