@@ -13,6 +13,7 @@ import Verify from "./pages/Verify";
 import Audit from "./pages/Audit";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
+import { AssistBotButton } from "./components/AssistBot";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +36,7 @@ const App = () => (
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+        <AssistBotButton />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
