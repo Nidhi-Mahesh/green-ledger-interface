@@ -10,40 +10,44 @@ import {
   Users,
   CheckCircle,
   ArrowRight,
+  Calculator,
+  Bot,
+  Hash,
+  Activity
 } from "lucide-react";
 
 const Home = () => {
   const stats = [
-    { label: "Carbon Credits Issued", value: "2.4M Tons", icon: Leaf },
-    { label: "Active Projects", value: "342", icon: Globe },
-    { label: "Verified Transactions", value: "15,678", icon: CheckCircle },
-    { label: "Platform Users", value: "4,521", icon: Users },
+    { label: "Verified Tons CO₂e", value: "2.4M", icon: Leaf },
+    { label: "Active Project Nodes", value: "342", icon: Activity },
+    { label: "Consensus Proofs", value: "15,678", icon: Shield },
+    { label: "Network Participants", value: "4,521", icon: Users },
   ];
 
   const features = [
     {
       icon: Shield,
-      title: "Blockchain Verified",
+      title: "Auditable Consensus",
       description:
-        "Every carbon credit is tokenized and tracked on an immutable blockchain ledger.",
+        "Every credit is verified by a deterministic multi-agent consortium, ensuring zero human discretion.",
     },
     {
       icon: TrendingUp,
-      title: "Transparent Trading",
+      title: "Risk-Aware Trading",
       description:
-        "Fair market pricing with complete visibility into project details and verification status.",
+        "Dynamic collateral requirements automatically calculated based on agent confidence scores.",
     },
     {
-      icon: Users,
-      title: "Multi-Role Platform",
+      icon: Bot,
+      title: "Multi-Agent Nodes",
       description:
-        "Designed for project owners, verifiers, and buyers with dedicated workflows.",
+        "Independent verification agents (Satellite, Baseline, Anomaly) reach consensus on every ton.",
     },
     {
-      icon: Globe,
-      title: "Global Impact",
+      icon: Hash,
+      title: "Deterministic Hashes",
       description:
-        "Connect carbon offset projects worldwide with buyers seeking verified credits.",
+        "Verifiable attestation hashes allow any auditor to replay consensus logic and confirm results.",
     },
   ];
 
@@ -57,31 +61,29 @@ const Home = () => {
         <div className="container mx-auto px-4 relative">
           <div className="max-w-4xl mx-auto text-center space-y-6">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent border border-primary/20">
-              <Leaf className="w-4 h-4 text-primary" />
+              <Shield className="w-4 h-4 text-primary" />
               <span className="text-sm font-medium text-accent-foreground">
-                Decentralized Carbon Credit Trading
+                Next-Gen Deterministic Carbon Ledger
               </span>
             </div>
             <h1 className="text-5xl md:text-6xl font-bold text-foreground leading-tight">
-              Track, Trade & Retire{" "}
-              <span className="text-primary">Carbon Credits</span> with
-              Transparency
+              The Protocol for <br />
+              <span className="text-primary underline decoration-primary/30 underline-offset-8">Verified</span> Carbon Impact
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              CarbonChain leverages blockchain technology to create a
-              trustworthy marketplace for verified carbon offset projects and
-              tokenized credits.
+              Green Ledger replaces subjective manual audits with a deterministic, multi-agent consensus engine
+              recorded on an immutable auditable trail.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
               <Link to="/signup">
-                <Button size="lg" className="bg-gradient-primary shadow-glow">
-                  Get Started
+                <Button size="lg" className="bg-gradient-primary shadow-glow px-8">
+                  Launch App
                   <ArrowRight className="ml-2 w-4 h-4" />
                 </Button>
               </Link>
               <Link to="/marketplace">
-                <Button size="lg" variant="outline">
-                  Explore Marketplace
+                <Button size="lg" variant="outline" className="px-8 border-primary/30">
+                  Marketplace
                 </Button>
               </Link>
             </div>
@@ -112,11 +114,10 @@ const Home = () => {
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Why Choose CarbonChain?
+              The Green Ledger Standard
             </h2>
             <p className="text-lg text-muted-foreground">
-              A comprehensive platform built for trust, transparency, and
-              environmental impact.
+              Eliminating "Green-washing" through programmatic enforcement and auditable replayability.
             </p>
           </div>
 
@@ -124,7 +125,7 @@ const Home = () => {
             {features.map((feature, index) => (
               <Card
                 key={index}
-                className="p-6 bg-card hover:shadow-md transition-all"
+                className="p-6 bg-card hover:shadow-md transition-all border-border/50"
               >
                 <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
                   <feature.icon className="w-6 h-6 text-primary" />
@@ -142,14 +143,14 @@ const Home = () => {
       </section>
 
       {/* How It Works */}
-      <section className="py-20">
+      <section className="py-20 border-t border-border/50">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              How It Works
+              The Consensus Pipeline
             </h2>
             <p className="text-lg text-muted-foreground">
-              Simple steps to participate in the carbon credit ecosystem.
+              How the multi-agent consortium secures the carbon market.
             </p>
           </div>
 
@@ -159,11 +160,10 @@ const Home = () => {
                 1
               </div>
               <h3 className="text-xl font-semibold text-foreground">
-                Register Project
+                Submission
               </h3>
               <p className="text-muted-foreground">
-                Project owners submit carbon offset initiatives with supporting
-                documentation for verification.
+                Project owners register data with immutable evidence hashes attached.
               </p>
             </div>
 
@@ -172,11 +172,10 @@ const Home = () => {
                 2
               </div>
               <h3 className="text-xl font-semibold text-foreground">
-                Verify & Tokenize
+                Verification Consortium
               </h3>
               <p className="text-muted-foreground">
-                Independent verifiers approve projects, and credits are minted
-                as blockchain tokens (1 token = 1 ton CO₂e).
+                Agent nodes analyze data and reach weighted consensus on reduction claims.
               </p>
             </div>
 
@@ -185,11 +184,10 @@ const Home = () => {
                 3
               </div>
               <h3 className="text-xl font-semibold text-foreground">
-                Trade & Retire
+                Attestation
               </h3>
               <p className="text-muted-foreground">
-                Buy, sell, or permanently retire credits on our transparent
-                marketplace with full audit trails.
+                A deterministic hash secures the result, making the entire audit trail auditable.
               </p>
             </div>
           </div>
@@ -201,18 +199,17 @@ const Home = () => {
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center space-y-6">
             <h2 className="text-3xl md:text-4xl font-bold text-primary-foreground">
-              Join the Carbon Offset Revolution
+              Ready to verify real impact?
             </h2>
             <p className="text-lg text-primary-foreground/90">
-              Whether you're a project owner, verifier, or buyer, CarbonChain
-              provides the tools you need to make a real environmental impact.
+              Join the Green Ledger ecosystem and participate in the world's most transparent carbon credit marketplace.
             </p>
             <Link to="/signup">
               <Button
                 size="lg"
-                className="bg-card text-primary hover:bg-card/90 shadow-lg"
+                className="bg-card text-primary hover:bg-card/90 shadow-lg px-12"
               >
-                Create Your Account
+                Join the Network
                 <ArrowRight className="ml-2 w-4 h-4" />
               </Button>
             </Link>
@@ -226,17 +223,17 @@ const Home = () => {
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-2 text-primary font-bold text-lg">
               <Leaf className="w-6 h-6" />
-              CarbonChain
+              Green Ledger Protocol
             </div>
-            <div className="text-sm text-muted-foreground">
-              © 2024 CarbonChain. Building a sustainable future.
+            <div className="text-sm text-muted-foreground font-mono">
+              STATUS: FULLY DETERMINISTIC & AUDITABLE
             </div>
             <div className="flex gap-6 text-sm text-muted-foreground">
               <a href="#" className="hover:text-primary transition-colors">
-                Privacy
+                Whitepaper
               </a>
               <a href="#" className="hover:text-primary transition-colors">
-                Terms
+                Audit Trail
               </a>
               <a href="#" className="hover:text-primary transition-colors">
                 Contact

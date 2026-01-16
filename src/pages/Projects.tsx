@@ -31,57 +31,22 @@ import {
   FileText,
   Loader2,
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import {
   shortenHash,
-  generateAttestationHash,
   generateTxHash,
 } from "@/utils/fakeBlockchain";
-
-// Verification step type
-interface VerificationStep {
-  id: string;
-  name: string;
-  status: "pending" | "in-progress" | "completed";
-  icon: React.ElementType;
-}
-
-// AI Agent result type
-interface AgentResult {
-  agentName: string;
-  confidenceScore: number;
-  anomalyScore: number;
-  estimatedVerifiedTons: number;
-  weight: number;
-}
-
-// Project type with full verification data
-interface Project {
-  id: number;
-  name: string;
-  type: string;
-  location: string;
-  claimedReduction: number;
-  status: "draft" | "submitted" | "verifying" | "approved" | "approved-reduced" | "frozen" | "rejected";
-  submittedDate: string;
-  attestationHash: string | null;
-  mintTxHash: string | null;
-  verificationSteps: VerificationStep[];
-  agentResults: AgentResult[] | null;
-  consensusData: {
-    weightedConfidence: number;
-    finalVerifiedTons: number;
-    reductionReason?: string;
-  } | null;
-  evidenceHash: string | null;
-}
+import { useGlobalStore, Project, VerificationStep } from "@/context/GlobalStore";
 
 const Projects = () => {
+  const { state, dispatch } = useGlobalStore();
   const [showForm, setShowForm] = useState(false);
   const [formLocked, setFormLocked] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const { toast } = useToast();
+
+  const myProjects = state.projects;
 
   // Form state
   const [formData, setFormData] = useState({
@@ -91,124 +56,6 @@ const Projects = () => {
     claimedReduction: "",
     description: "",
   });
-
-  // Sample projects with full verification workflow data
-  const [myProjects, setMyProjects] = useState<Project[]>([
-    {
-      id: 1,
-      name: "Solar Farm Alpha",
-      type: "Solar Energy",
-      location: "California, USA",
-      claimedReduction: 500,
-      status: "approved",
-      submittedDate: "2024-01-15",
-      attestationHash: "0x7a3f8e2c4b9d1a6f5e8c7b4a9d2e1f3c8b7a6d5e4c3b2a1f9e8d7c6b5a4392bc",
-      mintTxHash: "0x1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c",
-      evidenceHash: "0xevd8e2c4b9d1a6f5e8c7b4a9d2e1f3c8b7a6d5e4c3b2a1f9e8d7c6b5a43def1",
-      verificationSteps: [
-        { id: "submitted", name: "Submitted", status: "completed", icon: FileText },
-        { id: "baseline", name: "Baseline Agent Analysis", status: "completed", icon: Bot },
-        { id: "satellite", name: "Satellite Agent Analysis", status: "completed", icon: Satellite },
-        { id: "anomaly", name: "Anomaly Agent Analysis", status: "completed", icon: AlertTriangle },
-        { id: "consensus", name: "Consensus Calculation", status: "completed", icon: Calculator },
-        { id: "result", name: "Final Result", status: "completed", icon: Shield },
-      ],
-      agentResults: [
-        { agentName: "Baseline Agent", confidenceScore: 94.2, anomalyScore: 2.1, estimatedVerifiedTons: 498, weight: 0.35 },
-        { agentName: "Satellite Agent", confidenceScore: 91.8, anomalyScore: 3.5, estimatedVerifiedTons: 492, weight: 0.40 },
-        { agentName: "Anomaly Detection Agent", confidenceScore: 96.5, anomalyScore: 1.2, estimatedVerifiedTons: 500, weight: 0.25 },
-      ],
-      consensusData: {
-        weightedConfidence: 93.7,
-        finalVerifiedTons: 496,
-        reductionReason: undefined,
-      },
-    },
-    {
-      id: 2,
-      name: "Wind Energy Delta",
-      type: "Wind Energy",
-      location: "Texas, USA",
-      claimedReduction: 800,
-      status: "verifying",
-      submittedDate: "2024-02-10",
-      attestationHash: null,
-      mintTxHash: null,
-      evidenceHash: "0xevd2d7f8a9b3c6d5e1f4a2b8c7d6e5f3a9b8c7d6e5f4a3b2c1d9e8f7a6b5712c",
-      verificationSteps: [
-        { id: "submitted", name: "Submitted", status: "completed", icon: FileText },
-        { id: "baseline", name: "Baseline Agent Analysis", status: "completed", icon: Bot },
-        { id: "satellite", name: "Satellite Agent Analysis", status: "in-progress", icon: Satellite },
-        { id: "anomaly", name: "Anomaly Agent Analysis", status: "pending", icon: AlertTriangle },
-        { id: "consensus", name: "Consensus Calculation", status: "pending", icon: Calculator },
-        { id: "result", name: "Final Result", status: "pending", icon: Shield },
-      ],
-      agentResults: [
-        { agentName: "Baseline Agent", confidenceScore: 88.5, anomalyScore: 5.2, estimatedVerifiedTons: 752, weight: 0.35 },
-      ],
-      consensusData: null,
-    },
-    {
-      id: 3,
-      name: "Reforestation Project Zeta",
-      type: "Reforestation",
-      location: "Oregon, USA",
-      claimedReduction: 300,
-      status: "approved-reduced",
-      submittedDate: "2024-01-20",
-      attestationHash: "0x9c8b7a6d5e4f3c2b1a9e8d7c6b5a4f3e2d1c9b8a7f6e5d4c3b2a1f9e8d743de",
-      mintTxHash: "0x3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d",
-      evidenceHash: "0xevd9c8b7a6d5e4f3c2b1a9e8d7c6b5a4f3e2d1c9b8a7f6e5d4c3b2a1f9def23",
-      verificationSteps: [
-        { id: "submitted", name: "Submitted", status: "completed", icon: FileText },
-        { id: "baseline", name: "Baseline Agent Analysis", status: "completed", icon: Bot },
-        { id: "satellite", name: "Satellite Agent Analysis", status: "completed", icon: Satellite },
-        { id: "anomaly", name: "Anomaly Agent Analysis", status: "completed", icon: AlertTriangle },
-        { id: "consensus", name: "Consensus Calculation", status: "completed", icon: Calculator },
-        { id: "result", name: "Final Result", status: "completed", icon: Shield },
-      ],
-      agentResults: [
-        { agentName: "Baseline Agent", confidenceScore: 78.3, anomalyScore: 12.5, estimatedVerifiedTons: 245, weight: 0.35 },
-        { agentName: "Satellite Agent", confidenceScore: 72.1, anomalyScore: 15.8, estimatedVerifiedTons: 228, weight: 0.40 },
-        { agentName: "Anomaly Detection Agent", confidenceScore: 81.2, anomalyScore: 9.3, estimatedVerifiedTons: 256, weight: 0.25 },
-      ],
-      consensusData: {
-        weightedConfidence: 76.4,
-        finalVerifiedTons: 238,
-        reductionReason: "Satellite imagery analysis detected 20.7% less vegetation coverage than claimed. Anomaly agents flagged inconsistencies in growth rate projections.",
-      },
-    },
-    {
-      id: 4,
-      name: "Mangrove Conservation Beta",
-      type: "Marine Conservation",
-      location: "Thailand",
-      claimedReduction: 450,
-      status: "frozen",
-      submittedDate: "2024-02-01",
-      attestationHash: "0xfrz4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d",
-      mintTxHash: null,
-      evidenceHash: "0xevd4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1bab42",
-      verificationSteps: [
-        { id: "submitted", name: "Submitted", status: "completed", icon: FileText },
-        { id: "baseline", name: "Baseline Agent Analysis", status: "completed", icon: Bot },
-        { id: "satellite", name: "Satellite Agent Analysis", status: "completed", icon: Satellite },
-        { id: "anomaly", name: "Anomaly Agent Analysis", status: "completed", icon: AlertTriangle },
-        { id: "consensus", name: "Consensus Calculation", status: "completed", icon: Calculator },
-        { id: "result", name: "Final Result", status: "completed", icon: Shield },
-      ],
-      agentResults: [
-        { agentName: "Baseline Agent", confidenceScore: 45.2, anomalyScore: 42.8, estimatedVerifiedTons: 180, weight: 0.35 },
-        { agentName: "Satellite Agent", confidenceScore: 38.7, anomalyScore: 55.3, estimatedVerifiedTons: 145, weight: 0.40 },
-        { agentName: "Anomaly Detection Agent", confidenceScore: 52.1, anomalyScore: 38.9, estimatedVerifiedTons: 195, weight: 0.25 },
-      ],
-      consensusData: {
-        weightedConfidence: 44.1,
-        finalVerifiedTons: 0,
-        reductionReason: "Critical anomalies detected: Satellite imagery shows significant discrepancies with claimed mangrove coverage. Multiple agents flagged potential misrepresentation. Project frozen pending manual review by governance committee.",
-      },
-    },
-  ]);
 
   const copyToClipboard = (hash: string) => {
     navigator.clipboard.writeText(hash);
@@ -249,11 +96,12 @@ const Projects = () => {
 
   const getStatusBadge = (status: Project["status"]) => {
     switch (status) {
-      case "approved":
+      case "verified":
+      case "tradable":
         return (
           <Badge className="bg-success text-success-foreground">
             <CheckCircle className="w-3 h-3 mr-1" />
-            Approved
+            Verified
           </Badge>
         );
       case "approved-reduced":
@@ -274,10 +122,10 @@ const Projects = () => {
         return (
           <Badge className="bg-primary text-primary-foreground">
             <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-            AI Verification In Progress
+            Multi-agent verification In Progress
           </Badge>
         );
-      case "submitted":
+      case "unverified":
         return (
           <Badge className="bg-muted text-muted-foreground">
             <Clock className="w-3 h-3 mr-1" />
@@ -299,47 +147,54 @@ const Projects = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
+    const timestamp = new Date().toISOString();
+    const projectId = `proj-${Date.now()}`;
+
     const newProject: Project = {
-      id: Date.now(),
+      id: projectId,
       name: formData.name,
       type: formData.type,
       location: formData.location,
       claimedReduction: parseInt(formData.claimedReduction),
-      status: "submitted",
-      submittedDate: new Date().toISOString().split("T")[0],
+      description: formData.description,
+      status: "unverified",
+      submittedDate: timestamp.split("T")[0],
       attestationHash: null,
       mintTxHash: null,
       evidenceHash: generateTxHash(),
       verificationSteps: [
-        { id: "submitted", name: "Submitted", status: "completed", icon: FileText },
-        { id: "baseline", name: "Baseline Agent Analysis", status: "pending", icon: Bot },
-        { id: "satellite", name: "Satellite Agent Analysis", status: "pending", icon: Satellite },
-        { id: "anomaly", name: "Anomaly Agent Analysis", status: "pending", icon: AlertTriangle },
-        { id: "consensus", name: "Consensus Calculation", status: "pending", icon: Calculator },
-        { id: "result", name: "Final Result", status: "pending", icon: Shield },
+        { id: "submitted", name: "Submitted", status: "completed", iconName: "FileText" },
+        { id: "baseline", name: "Baseline Agent Analysis", status: "pending", iconName: "Bot" },
+        { id: "satellite", name: "Satellite Agent Analysis", status: "pending", iconName: "Satellite" },
+        { id: "anomaly", name: "Anomaly Agent Analysis", status: "pending", iconName: "AlertTriangle" },
+        { id: "consensus", name: "Consensus Calculation", status: "pending", iconName: "Calculator" },
+        { id: "result", name: "Final Result", status: "pending", iconName: "Shield" },
       ],
       agentResults: null,
       consensusData: null,
+      availableSupply: 0,
     };
 
-    setMyProjects([newProject, ...myProjects]);
+    dispatch({ type: "ADD_PROJECT", payload: newProject });
+    dispatch({
+      type: "ADD_AUDIT_EVENT",
+      payload: {
+        id: `evt-${Date.now()}`,
+        timestamp,
+        projectId,
+        projectName: newProject.name,
+        attestationHash: null,
+        actionType: "submission",
+        details: `Project "${newProject.name}" submitted for verification. Evidence Hash: ${newProject.evidenceHash}`,
+      },
+    });
+
     setFormLocked(true);
 
     toast({
-      title: "Project Submitted for AI Verification",
-      description: "Your project has entered the automated verification pipeline. You will be notified of results.",
+      title: "Project Submitted for Multi-agent Verification",
+      description: "Your project has entered the automated verification pipeline. You can track progress in the list below.",
     });
-
-    // Simulate verification starting
-    setTimeout(() => {
-      setMyProjects((prev) =>
-        prev.map((p) =>
-          p.id === newProject.id
-            ? { ...p, status: "verifying" as const, verificationSteps: p.verificationSteps.map((s, i) => (i === 1 ? { ...s, status: "in-progress" as const } : s)) }
-            : p
-        )
-      );
-    }, 2000);
 
     setShowForm(false);
     setFormLocked(false);
@@ -382,7 +237,7 @@ const Projects = () => {
             <div>
               <h3 className="font-semibold text-foreground mb-1">Automated Verification System</h3>
               <p className="text-sm text-muted-foreground">
-                All verification and minting decisions are made automatically by our AI agent consortium and enforced by blockchain smart contracts. 
+                All verification and minting decisions are made automatically by our AI agent consortium and enforced by blockchain smart contracts.
                 Human intervention is not possible in the verification process, ensuring complete transparency and immutability.
               </p>
             </div>
@@ -548,29 +403,35 @@ const Projects = () => {
                   <div>
                     <h4 className="text-md font-semibold text-foreground mb-4 flex items-center gap-2">
                       <Bot className="w-4 h-4" />
-                      AI Verification Pipeline
+                      Multi-agent Verification Pipeline
                     </h4>
                     <div className="mb-2">
                       <Progress value={getVerificationProgress(project.verificationSteps)} className="h-2" />
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
-                      {project.verificationSteps.map((step) => (
-                        <div
-                          key={step.id}
-                          className={`p-3 rounded-lg text-center text-xs ${
-                            step.status === "completed"
+                      {project.verificationSteps.map((step) => {
+                        const IconMap: { [key: string]: React.ElementType } = {
+                          FileText, Bot, Satellite, AlertTriangle, Calculator, Shield
+                        };
+                        const StepIcon = IconMap[step.iconName] || Bot;
+
+                        return (
+                          <div
+                            key={step.id}
+                            className={`p-3 rounded-lg text-center text-xs ${step.status === "completed"
                               ? "bg-success/10 text-success border border-success/20"
                               : step.status === "in-progress"
-                              ? "bg-primary/10 text-primary border border-primary/20"
-                              : "bg-muted text-muted-foreground border border-border"
-                          }`}
-                        >
-                          <step.icon className={`w-4 h-4 mx-auto mb-1 ${step.status === "in-progress" ? "animate-pulse" : ""}`} />
-                          <span className="block truncate">{step.name}</span>
-                          {step.status === "completed" && <CheckCircle className="w-3 h-3 mx-auto mt-1" />}
-                          {step.status === "in-progress" && <Loader2 className="w-3 h-3 mx-auto mt-1 animate-spin" />}
-                        </div>
-                      ))}
+                                ? "bg-primary/10 text-primary border border-primary/20"
+                                : "bg-muted text-muted-foreground border border-border"
+                              }`}
+                          >
+                            <StepIcon className={`w-4 h-4 mx-auto mb-1 ${step.status === "in-progress" ? "animate-pulse" : ""}`} />
+                            <span className="block truncate">{step.name}</span>
+                            {step.status === "completed" && <CheckCircle className="w-3 h-3 mx-auto mt-1" />}
+                            {step.status === "in-progress" && <Loader2 className="w-3 h-3 mx-auto mt-1 animate-spin" />}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
 
