@@ -47,10 +47,40 @@ const Verify = () => {
     });
   };
 
-  const handleRunVerification = (project: Project) => {
+  const handleRunVerification = async (project: Project) => {
     setIsReplaying(true);
 
-    setTimeout(() => {
+    try {
+      // Call backend API to trigger the agent pipeline
+      const response = await fetch(`http://localhost:3001/api/verify/${project.id}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          method: 'AWD',
+          area: project.claimedReduction / 2, // Rough estimate
+          projectName: project.name,
+          location: project.location,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Backend verification failed');
+      }
+
+      const result = await response.json();
+      console.log('Backend pipeline started:', result);
+
+      toast({
+        title: "Pipeline Started",
+        description: "Check your backend terminal for real-time agent logs!",
+      });
+
+      // Wait for pipeline to complete (simulated - in production you'd use SSE or polling)
+      await new Promise(resolve => setTimeout(resolve, 10000));
+
+      // Generate frontend results for UI display
       const agentResults = generateAgentOutputs(project);
       const consensus = calculateConsensus(agentResults);
       const attestationHash = generateDeterministicHash(project, agentResults, consensus);
@@ -91,7 +121,15 @@ const Verify = () => {
         title: "Verification Complete",
         description: `Project ${project.name} has been processed with status: ${consensus.status}`,
       });
-    }, 2000);
+    } catch (error) {
+      console.error('Verification error:', error);
+      setIsReplaying(false);
+      toast({
+        title: "Verification Failed",
+        description: "Could not connect to backend. Make sure the server is running on port 3001.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleReplayConsensus = (project: Project) => {
