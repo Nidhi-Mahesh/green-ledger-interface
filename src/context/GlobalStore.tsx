@@ -45,6 +45,12 @@ export interface Project {
     reductionReason?: string;
   } | null;
   availableSupply: number;
+  evidenceFile?: {
+    name: string;
+    size: number;
+    type: string;
+    lastModified: number;
+  } | null;
 }
 
 export interface AuditEvent {

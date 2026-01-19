@@ -31,7 +31,7 @@ import {
   FileText,
   Loader2,
 } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import {
   shortenHash,
@@ -44,6 +44,8 @@ const Projects = () => {
   const [showForm, setShowForm] = useState(false);
   const [formLocked, setFormLocked] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   const myProjects = state.projects;
@@ -92,6 +94,17 @@ const Projects = () => {
       title: "Downloaded!",
       description: "Attestation JSON file downloaded",
     });
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setSelectedFile(file);
+      toast({
+        title: "File Selected",
+        description: `${file.name} (${(file.size / 1024).toFixed(1)} KB) ready for upload.`,
+      });
+    }
   };
 
   const getStatusBadge = (status: Project["status"]) => {
@@ -173,6 +186,12 @@ const Projects = () => {
       agentResults: null,
       consensusData: null,
       availableSupply: 0,
+      evidenceFile: selectedFile ? {
+        name: selectedFile.name,
+        size: selectedFile.size,
+        type: selectedFile.type,
+        lastModified: selectedFile.lastModified,
+      } : null,
     };
 
     dispatch({ type: "ADD_PROJECT", payload: newProject });
@@ -199,6 +218,7 @@ const Projects = () => {
     setShowForm(false);
     setFormLocked(false);
     setFormData({ name: "", type: "", location: "", claimedReduction: "", description: "" });
+    setSelectedFile(null);
   };
 
   const getVerificationProgress = (steps: VerificationStep[]) => {
@@ -328,15 +348,38 @@ const Projects = () => {
               </div>
 
               <div className="space-y-2">
-                <Label>Evidence Upload (Mock)</Label>
-                <div className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary transition-colors cursor-pointer">
-                  <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-                  <p className="text-sm text-muted-foreground mb-1">
-                    Click to upload verification evidence
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    PDF, images, sensor data exports (max. 50MB)
-                  </p>
+                <Label>Evidence Upload</Label>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  className="hidden"
+                  accept=".json,.pdf,.csv"
+                />
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer ${selectedFile ? "border-primary bg-primary/5" : "border-border hover:border-primary"
+                    }`}
+                >
+                  {selectedFile ? (
+                    <div className="flex flex-col items-center">
+                      <CheckCircle className="w-8 h-8 text-primary mb-2" />
+                      <p className="text-sm font-medium text-foreground">{selectedFile.name}</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {(selectedFile.size / 1024).toFixed(1)} KB • Click to change
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                      <p className="text-sm text-muted-foreground mb-1">
+                        Click to upload verification evidence
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        JSON, PDF, CSV evidence data (max. 50MB)
+                      </p>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -563,6 +606,15 @@ const Projects = () => {
                           </div>
                         )}
                         <div className="flex gap-2 pt-2 border-t border-border/50">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => { e.stopPropagation(); toast({ title: "View Evidence", description: `Viewing: ${project.evidenceFile?.name || "N/A"}` }); }}
+                            disabled={!project.evidenceFile}
+                          >
+                            <FileText className="w-4 h-4 mr-2" />
+                            View Proof Document
+                          </Button>
                           <Button
                             variant="outline"
                             size="sm"
