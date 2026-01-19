@@ -29,6 +29,9 @@ function generateBaselineData(params) {
 
 export async function runBaselineAgent(projectId, params) {
     console.log(`[BACKEND] ⏳ Running Baseline Agent...`);
+    console.log(`[BACKEND] 📋 Project: ${params.projectName || 'Unknown'}`);
+    console.log(`[BACKEND] 🏷️  Type: ${params.projectType || params.method || 'Unknown'}`);
+    console.log(`[BACKEND] 📍 Location: ${params.location || 'Unknown'}`);
 
     await sleep(500);
     console.log(`[BACKEND] 🔍 Analyzing project methodology: ${params.method || 'AWD'}`);

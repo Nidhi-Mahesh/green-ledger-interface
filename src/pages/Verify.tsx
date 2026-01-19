@@ -58,10 +58,14 @@ const Verify = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          method: 'AWD',
-          area: project.claimedReduction / 2, // Rough estimate
+          method: project.type === 'Reforestation' ? 'Reforestation' : 'AWD', // Use project type
+          area: project.claimedReduction, // Use claimed reduction as area estimate
           projectName: project.name,
           location: project.location,
+          projectType: project.type,
+          description: project.description,
+          claimedReduction: project.claimedReduction,
+          submittedDate: project.submittedDate,
         }),
       });
 
@@ -77,8 +81,32 @@ const Verify = () => {
         description: "Check your backend terminal for real-time agent logs!",
       });
 
-      // Wait for pipeline to complete (simulated - in production you'd use SSE or polling)
-      await new Promise(resolve => setTimeout(resolve, 10000));
+      // Wait for pipeline to complete with simulated progress updates
+      // This matches the ~10s duration of the backend pipeline
+
+      // Stage 1: Baseline (starts immediately)
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      toast({
+        title: "Baseline Agent Active",
+        description: "Calculating emission reductions against regional baselines...",
+      });
+
+      // Stage 2: Satellite
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      toast({
+        title: "Satellite Analysis",
+        description: "Processing spectral imagery and NDVI vegetation indices...",
+      });
+
+      // Stage 3: Consensus
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      toast({
+        title: "Consensus Engine",
+        description: "Aggregating agent scores and minting to blockchain...",
+      });
+
+      // Finalization
+      await new Promise(resolve => setTimeout(resolve, 2000));
 
       // Generate frontend results for UI display
       const agentResults = generateAgentOutputs(project);
