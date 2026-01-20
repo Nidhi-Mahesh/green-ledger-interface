@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from "react";
-import { X, Send, Mic, MicOff, Volume2, VolumeX, Leaf } from "lucide-react";
+import { X, Send, Mic, MicOff, Volume2, VolumeX, Leaf, Languages } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { findResponse } from "./chatResponses";
+import { translateToKannada, getKannadaVoice } from "./kannadaTranslations";
 
 // TypeScript declarations for Web Speech API
 interface SpeechRecognitionEvent extends Event {
@@ -50,6 +51,7 @@ declare global {
 interface Message {
   id: number;
   text: string;
+  textKannada?: string;
   isBot: boolean;
   timestamp: Date;
 }
@@ -64,6 +66,7 @@ const AssistBotModal = ({ isOpen, onClose }: AssistBotModalProps) => {
     {
       id: 1,
       text: "Hi! I'm AssistBot 🌱 I'm here to help you navigate CarbonChain. Ask me about buying credits, submitting projects, or how verification works!",
+      textKannada: "ನಮಸ್ಕಾರ! ನಾನು ಅಸಿಸ್ಟ್‌ಬಾಟ್ 🌱 ಕಾರ್ಬನ್‌ಚೈನ್ ನ್ಯಾವಿಗೇಟ್ ಮಾಡಲು ನಿಮಗೆ ಸಹಾಯ ಮಾಡಲು ನಾನು ಇಲ್ಲಿದ್ದೇನೆ. ಕ್ರೆಡಿಟ್ ಖರೀದಿ, ಯೋಜನೆ ಸಲ್ಲಿಕೆ ಅಥವಾ ಪರಿಶೀಲನೆ ಹೇಗೆ ಕೆಲಸ ಮಾಡುತ್ತದೆ ಎಂಬುದರ ಬಗ್ಗೆ ನನ್ನನ್ನು ಕೇಳಿ!",
       isBot: true,
       timestamp: new Date(),
     },
@@ -71,6 +74,7 @@ const AssistBotModal = ({ isOpen, onClose }: AssistBotModalProps) => {
   const [inputValue, setInputValue] = useState("");
   const [isListening, setIsListening] = useState(false);
   const [isSpeechEnabled, setIsSpeechEnabled] = useState(true);
+  const [isKannadaMode, setIsKannadaMode] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<ISpeechRecognition | null>(null);
 
@@ -79,6 +83,20 @@ const AssistBotModal = ({ isOpen, onClose }: AssistBotModalProps) => {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
+
+  // Load voices when component mounts
+  useEffect(() => {
+    const loadVoices = () => {
+      window.speechSynthesis.getVoices();
+    };
+    
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+    
+    return () => {
+      window.speechSynthesis.onvoiceschanged = null;
+    };
+  }, []);
 
   // Initialize speech recognition
   useEffect(() => {
@@ -106,12 +124,23 @@ const AssistBotModal = ({ isOpen, onClose }: AssistBotModalProps) => {
     }
   }, []);
 
-  const speakResponse = (text: string) => {
+  const speakResponse = (text: string, useKannada: boolean = false) => {
     if (isSpeechEnabled && 'speechSynthesis' in window) {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 1;
+      utterance.rate = 0.9;
       utterance.pitch = 1;
+      
+      if (useKannada) {
+        const kannadaVoice = getKannadaVoice();
+        if (kannadaVoice) {
+          utterance.voice = kannadaVoice;
+        }
+        utterance.lang = 'kn-IN';
+      } else {
+        utterance.lang = 'en-US';
+      }
+      
       window.speechSynthesis.speak(utterance);
     }
   };
@@ -131,15 +160,24 @@ const AssistBotModal = ({ isOpen, onClose }: AssistBotModalProps) => {
 
     // Get bot response
     setTimeout(() => {
-      const response = findResponse(inputValue);
+      const englishResponse = findResponse(inputValue);
+      const kannadaResponse = translateToKannada(englishResponse);
+      
       const botMessage: Message = {
         id: Date.now() + 1,
-        text: response,
+        text: englishResponse,
+        textKannada: kannadaResponse,
         isBot: true,
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, botMessage]);
-      speakResponse(response);
+      
+      // Speak in the current language mode
+      if (isKannadaMode) {
+        speakResponse(kannadaResponse, true);
+      } else {
+        speakResponse(englishResponse, false);
+      }
     }, 500);
   };
 
@@ -155,6 +193,17 @@ const AssistBotModal = ({ isOpen, onClose }: AssistBotModalProps) => {
     } else {
       recognitionRef.current.start();
       setIsListening(true);
+    }
+  };
+
+  const toggleKannadaMode = () => {
+    setIsKannadaMode(!isKannadaMode);
+    
+    // Speak a confirmation in the new language
+    if (!isKannadaMode) {
+      speakResponse("ಕನ್ನಡ ಮೋಡ್ ಸಕ್ರಿಯಗೊಳಿಸಲಾಗಿದೆ", true);
+    } else {
+      speakResponse("Switched to English mode", false);
     }
   };
 
@@ -183,8 +232,25 @@ const AssistBotModal = ({ isOpen, onClose }: AssistBotModalProps) => {
           </div>
           <div className="flex-1">
             <h3 className="font-semibold text-white">AssistBot</h3>
-            <p className="text-xs text-white/80">Your CarbonChain Guide</p>
+            <p className="text-xs text-white/80">
+              {isKannadaMode ? "ನಿಮ್ಮ ಕಾರ್ಬನ್‌ಚೈನ್ ಮಾರ್ಗದರ್ಶಿ" : "Your CarbonChain Guide"}
+            </p>
           </div>
+          
+          {/* Kannada Toggle Button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={toggleKannadaMode}
+            className={`text-white hover:bg-white/20 px-2 py-1 text-xs font-medium rounded-full transition-all ${
+              isKannadaMode ? "bg-white/30 ring-2 ring-white/50" : ""
+            }`}
+            title={isKannadaMode ? "Switch to English" : "ಕನ್ನಡಕ್ಕೆ ಬದಲಾಯಿಸಿ"}
+          >
+            <Languages className="w-4 h-4 mr-1" />
+            {isKannadaMode ? "EN" : "ಕನ್ನಡ"}
+          </Button>
+          
           <Button
             variant="ghost"
             size="icon"
@@ -207,6 +273,15 @@ const AssistBotModal = ({ isOpen, onClose }: AssistBotModalProps) => {
           </Button>
         </div>
 
+        {/* Language Mode Indicator */}
+        {isKannadaMode && (
+          <div className="bg-amber-500/10 border-b border-amber-500/20 px-4 py-2">
+            <p className="text-xs text-amber-700 dark:text-amber-400 text-center font-medium">
+              🇮🇳 ಕನ್ನಡ ಮೋಡ್ ಸಕ್ರಿಯವಾಗಿದೆ • Kannada Mode Active
+            </p>
+          </div>
+        )}
+
         {/* Messages */}
         <ScrollArea className="flex-1 p-4" ref={scrollRef}>
           <div className="space-y-4">
@@ -228,7 +303,11 @@ const AssistBotModal = ({ isOpen, onClose }: AssistBotModalProps) => {
                       <span className="text-xs font-medium">AssistBot</span>
                     </div>
                   )}
-                  <p className="text-sm leading-relaxed">{message.text}</p>
+                  <p className="text-sm leading-relaxed">
+                    {message.isBot && isKannadaMode && message.textKannada
+                      ? message.textKannada
+                      : message.text}
+                  </p>
                 </div>
               </div>
             ))}
@@ -254,7 +333,7 @@ const AssistBotModal = ({ isOpen, onClose }: AssistBotModalProps) => {
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Type or speak your question..."
+              placeholder={isKannadaMode ? "ನಿಮ್ಮ ಪ್ರಶ್ನೆಯನ್ನು ಟೈಪ್ ಮಾಡಿ..." : "Type or speak your question..."}
               className="flex-1"
             />
             <Button onClick={handleSend} className="bg-primary">
@@ -263,7 +342,7 @@ const AssistBotModal = ({ isOpen, onClose }: AssistBotModalProps) => {
           </div>
           {isListening && (
             <p className="text-xs text-muted-foreground mt-2 text-center animate-pulse">
-              🎤 Listening... Speak now
+              🎤 {isKannadaMode ? "ಆಲಿಸುತ್ತಿದೆ... ಈಗ ಮಾತನಾಡಿ" : "Listening... Speak now"}
             </p>
           )}
         </div>

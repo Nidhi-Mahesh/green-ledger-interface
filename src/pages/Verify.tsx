@@ -124,7 +124,7 @@ const Verify = () => {
           reductionReason: consensus.reductionReason,
         },
         attestationHash,
-        mintTxHash: (consensus.status !== "frozen" && consensus.status !== "rejected") ? `0xmint_${attestationHash.slice(14)}` : null,
+        mintTxHash: (consensus.status !== "frozen") ? `0xmint_${attestationHash.slice(14)}` : null,
         availableSupply: consensus.finalVerifiedTons,
       };
 
